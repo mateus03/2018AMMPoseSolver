@@ -21,7 +21,7 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 #set the default path for built libraries to the "lib" directory
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 
-OPTION(BUILD_TESTS "Build tests" ON)
+OPTION(BUILD_TESTS "Build tests" OFF)
 OPTION(BUILD_PYTHON "Build Python extension" OFF)
 
 IF(MSVC)
@@ -133,6 +133,12 @@ set( OPENGV_SOURCE_FILES
   src/relative_pose/MANoncentralRelativeMulti.cpp
   src/point_cloud/MAPointCloud.cpp
 
+  # registration
+  src/registration/PointRegistrationAdapter.cpp
+  src/registration/PlaneRegistrationAdapter.cpp
+  src/registration/LineRegistrationAdapter.cpp
+  src/registration/LineCorrRegistrationAdapter.cpp
+
   #optimization tools
   src/optimization_tools/solver_tools/SolverToolsNoncentralRelativePose.cpp
   src/optimization_tools/objective_function_tools/SquaredFunctionInfo.cpp
@@ -140,11 +146,16 @@ set( OPENGV_SOURCE_FILES
   src/optimization_tools/objective_function_tools/GlobalPnPFunctionInfo.cpp
   src/optimization_tools/objective_function_tools/GlobalPnPInfiniteNormFunctionInfo.cpp
   src/optimization_tools/objective_function_tools/OptimalUPnPFunctionInfo.cpp
-  src/optimization_tools/objective_function_tools/SquaredFunctionCentralInfo.cpp
+  src/optimization_tools/objective_function_tools/Point3DRegistrationFunctionInfo.cpp
+  src/optimization_tools/objective_function_tools/Plane3DRegistrationFunctionInfo.cpp
+  src/optimization_tools/objective_function_tools/Plane3P3DRegistrationFunctionInfo.cpp
+  src/optimization_tools/objective_function_tools/LineIntersection3DRegistrationFunctionInfo.cpp
+  src/optimization_tools/objective_function_tools/Line3DRegistrationFunctionInfo.cpp
+  src/optimization_tools/objective_function_tools/HybridRegistrationFunctionInfo.cpp
+  # src/optimization_tools/objective_function_tools/SquaredFunctionCentralInfo.cpp
   
   #amm
   src/amm.cpp
-
 
   #statistical information tools
   src/statistic/StatisticalInfoContainer.cpp
@@ -152,8 +163,7 @@ set( OPENGV_SOURCE_FILES
 
   #auxiliary tools for experiments
   #src/support_experiments/adapter_creator.cpp
-  )
-
+)
 
 set( OPENGV_HEADER_FILES
   include/opengv/types.hpp
@@ -199,6 +209,14 @@ set( OPENGV_HEADER_FILES
   include/opengv/relative_pose/MANoncentralRelativeMulti.hpp
   include/opengv/point_cloud/MAPointCloud.hpp
 
+  # registration
+  include/opengv/registration/RegistrationAdapterBase.hpp
+  include/opengv/registration/PointRegistrationAdapter.hpp
+  include/opengv/registration/PlaneRegistrationAdapter.hpp
+  include/opengv/registration/LineRegistrationAdapter.hpp
+  include/opengv/registration/LineCorrRegistrationAdapter.hpp
+  
+
   #optimizations tools
   include/opengv/optimization_tools/solver_tools/SolverTools.hpp
   include/opengv/optimization_tools/solver_tools/SolverToolsNoncentralRelativePose.hpp
@@ -208,7 +226,13 @@ set( OPENGV_HEADER_FILES
   include/opengv/optimization_tools/objective_function_tools/GlobalPnPFunctionInfo.hpp
   include/opengv/optimization_tools/objective_function_tools/GlobalPnPInfiniteNormFunctionInfo.hpp
   include/opengv/optimization_tools/objective_function_tools/OptimalUPnPFunctionInfo.hpp
-  include/opengv/optimization_tools/objective_function_tools/SquaredFunctionCentralInfo.hpp
+  include/opengv/optimization_tools/objective_function_tools/Point3DRegistrationFunctionInfo.hpp
+  include/opengv/optimization_tools/objective_function_tools/Plane3DRegistrationFunctionInfo.hpp
+  include/opengv/optimization_tools/objective_function_tools/Plane3P3DRegistrationFunctionInfo.hpp
+  include/opengv/optimization_tools/objective_function_tools/LineIntersection3DRegistrationFunctionInfo.hpp
+  include/opengv/optimization_tools/objective_function_tools/Line3DRegistrationFunctionInfo.hpp
+  include/opengv/optimization_tools/objective_function_tools/HybridRegistrationFunctionInfo.hpp
+  # include/opengv/optimization_tools/objective_function_tools/SquaredFunctionCentralInfo.hpp
 
   #amm
   include/opengv/amm.hpp
@@ -220,7 +244,7 @@ set( OPENGV_HEADER_FILES
 
   #auxiliary tools for experiments
   #include/opengv/support_experiments/adapter_creator.hpp
-  )
+)
 
 
 add_library( opengv ${OPENGV_SOURCE_FILES} ${OPENGV_HEADER_FILES} )

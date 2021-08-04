@@ -171,6 +171,22 @@ typedef struct GeOutput
   Eigen::Matrix4d   eigenvectors;
 } geOutput_t;
 
+// typedef for plane coordinates (normal + offset)
+typedef Eigen::Vector4d
+    plane_t;
+
+/** An array of 3D-[planes] */
+typedef std::vector<plane_t, Eigen::aligned_allocator<plane_t> >
+    planes_t;
+
+// line in Plucker Coordinates
+typedef Eigen::Matrix<double,6,1>
+    line_t;
+
+/** An array of 3D-[lines] */
+typedef std::vector<line_t, Eigen::aligned_allocator<line_t> >
+    lines_t;
+
 }
 
 #endif /* OPENGV_TYPES_HPP_ */

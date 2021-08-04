@@ -32,7 +32,7 @@ opengv::rotation_t SolverToolsNoncentralRelativePose::rotation_solver(opengv::ro
   //std::cout << "Inside rotation solver to check the values: " << std::endl;
   //std::cout << "Before process starts the rotation matrix is: " << X << std::endl;
   
-  while( erro > tol && k < 1e5 )
+  while( erro > tol && k < 1e3 )
     {
 
       //std::cout << "state at the beginning: " << std::endl << X << std::endl << std::endl;
@@ -101,6 +101,7 @@ opengv::rotation_t SolverToolsNoncentralRelativePose::rotation_solver(opengv::ro
       previous_X = X;
       X    = P*X;
       erro = ( X - previous_X ).norm();
+      // std::cout << "Rotation: "    << std::endl << X << std::endl;
       /*std::cout << "inside rotation solver: " << std::endl;
       std::cout << "\nIteration: " << k << std::endl;
       std::cout << "Rotation: "    << std::endl << X << std::endl;
@@ -124,7 +125,7 @@ opengv::translation_t SolverToolsNoncentralRelativePose::translation_solver(cons
   opengv::translation_t new_state = state - step * grad;
   //std::cout << "Beginning of the translation solver: " << std::endl;
   //std::cout << "The rotation used is: " << std::endl << rotation << std::endl;
-  while (error > tol ){
+  while (error > tol  && k < 1000){
     new_state = state - step * grad;
     double f_obj_current = info_function->objective_function_value(rotation, state);
     double f_obj_next = info_function->objective_function_value(rotation, new_state);

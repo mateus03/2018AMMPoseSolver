@@ -22,17 +22,22 @@ opengv::transformation_t amm::amm_solver(double & tol,
   opengv::rotation_t state = initial_state;
   opengv::translation_t translation = initial_translation;
   //opengv::rotation_t previous_state = initial_state;
-  double tol_solvers = 1e-6;
+  double tol_solvers = 1e-9;
   //std::cout << "Beginning of the amm" << std::endl;
   int translation_iterations = 0;
   int rotation_iterations = 0;
   iter_stat_list.clear();
   iterations_info aux;
+
+  double f_previous_value = objective_function_container->objective_function_value(state, translation);
+  // std::cout << f_previous_value << std::endl;
+
   while (error > tol && iteration < max){
     //previous_state = state;
     //minimize rotation state
     //std::cout << "Iteration: " << iteration << std::endl;
-    double f_previous_value = objective_function_container->objective_function_value(state, translation);
+    f_previous_value = objective_function_container->objective_function_value(state, translation);
+    // std::cout << f_previous_value << std::endl;
     translation = solver_container->translation_solver(state, translation, tol_solvers, objective_function_container, step, translation_iterations);
     /*std::cout << "New rotation: "              << std::endl << state       << std::endl;
       std::cout << "The translation: "           << std::endl << translation << std::endl;*/
@@ -40,6 +45,7 @@ opengv::transformation_t amm::amm_solver(double & tol,
       /*std::cout << "New translation: "           << std::endl << translation << std::endl;
 	std::cout << "End of iteration: " << std::endl;*/
    double f_current_value = objective_function_container->objective_function_value(state, translation);
+  //  std::cout << f_previous_value << std::endl;
    error = std::abs(f_previous_value - f_current_value);
    iteration++;
   
@@ -47,7 +53,9 @@ opengv::transformation_t amm::amm_solver(double & tol,
    aux.iterations_translation = translation_iterations;
    iter_stat_list.push_back(aux);
   }
- 
+  
+  // std::cout << iteration << " " << error << std::endl;
+
   opengv::transformation_t solution;
   solution.block<3,3>(0,0) = state;
   solution.block<3,1>(0,3) = translation;
