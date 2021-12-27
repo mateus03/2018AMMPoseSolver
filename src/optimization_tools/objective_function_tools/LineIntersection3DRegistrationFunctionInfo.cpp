@@ -5,8 +5,9 @@ LineIntersection3DRegistrationFunctionInfo::
         const opengv::registration::LineRegistrationAdapter & adapter){
 
     size_t numberIntersections = adapter.getNumberCorrespondences();
-    M = Eigen::MatrixXd::Zero (numberIntersections, 18);
+    M = Eigen::Matrix<double,18,18>::Zero();
     Eigen::Matrix<double,6,1> l1,l2;
+    Eigen::Matrix<double,18,1> vector_data = Eigen::Matrix<double,18,1>::Zero();
     for(size_t iter = 0; iter < numberIntersections; iter++){
         l1 = adapter.getLine1(iter);
         l2 = adapter.getLine2(iter);
@@ -19,14 +20,24 @@ LineIntersection3DRegistrationFunctionInfo::
         double a12 = l2(2,0) * l1(0,0); double a13 = l2(2,0) * l1(1,0); double a14 = l2(2,0) * l1(2,0);//e3
         double a15 = l2(2,0) * l1(3,0); double a16 = l2(2,0) * l1(4,0); double a17 = l2(2,0) * l1(5,0);//r3
         double a18 = l2(3,0) * l1(0,0); double a19 = l2(3,0) * l1(1,0); double a20 = l2(3,0) * l1(2,0); //r1->First column of the rotation matrix
+        //double a21 = l2(3,0) * l1(3,0); double a22 = l2(3,0) * l1(4,0); double a23 = l2(3,0) * l1(5,0); //0
         double a24 = l2(4,0) * l1(0,0); double a25 = l2(4,0) * l1(1,0); double a26 = l2(4,0) * l1(2,0);//r2
+        //double a27 = l2(4,0) * l1(3,0); double a28 = l2(4,0) * l1(4,0); double a29 = l2(4,0) * l1(5,0);//0
         double a30 = l2(5,0) * l1(0,0); double a31 = l2(5,0) * l1(1,0); double a32 = l2(5,0) * l1(2,0);//r3
-        M(iter,0) = a00; M(iter,1) = a01; M(iter,2) = a02; //e1->Column
-        M(iter,3) = a06; M(iter,4) = a07; M(iter,5) = a08; //e2
-        M(iter,6) = a12; M(iter,7) = a13; M(iter,8) = a14; //e3
-        M(iter,9)  = a03 + a18; M(iter,10) = a04 + a19; M(iter,11) = a05 + a20; //r1->Column R
-        M(iter,12) = a09 + a24; M(iter,13) = a10 + a25; M(iter,14) = a11 + a26;
-        M(iter,15) = a15 + a30; M(iter,16) = a16 + a31; M(iter,17) = a17 + a32;
+        //double a33 = l2(5,0) * l1(3,0); double a34 = l2(5,0) * l1(4,0); double a35 = l2(5,0) * l1(5,0);//0
+        vector_data(0,0) = a00; vector_data(1,0) = a01; vector_data(2,0) = a02; //e1->Column
+        vector_data(3,0) = a06; vector_data(4,0) = a07; vector_data(5,0) = a08; //e2
+        vector_data(6,0) = a12; vector_data(7,0) = a13; vector_data(8,0) = a14; //e3
+
+
+        vector_data(9,0)  = a03 + a18; vector_data(10,0) = a04 + a19; vector_data(11,0) = a05 + a20; //r1->Column R
+        vector_data(12,0) = a09 + a24; vector_data(13,0) = a10 + a25; vector_data(14,0) = a11 + a26;
+        vector_data(15,0) = a15 + a30; vector_data(16,0) = a16 + a31; vector_data(17,0) = a17 + a32;
+        /*std::cout << "l1: "  << " " << l1(0,0) << " " << l1(1,0) << " " << l1(2,0) << " "
+                << l1(3,0) << " " << l1(4,0) << " " << l1(5,0) << std::endl;
+        std::cout << "l2: "  << " " << l2(0,0) << " " << l2(1,0) << " " << l2(2,0) << " "
+        << l2(3,0) << " " << l2(4,0) << " " << l2(5,0) << std::endl;*/
+        M = M + (vector_data * vector_data.transpose());
     }
 }
 
@@ -56,17 +67,9 @@ double LineIntersection3DRegistrationFunctionInfo::objective_function_value(cons
     v(15,0) = rotation(0,2);
     v(16,0) = rotation(1,2);
     v(17,0) = rotation(2,2);
-    int n_cols = M.cols();
-    int n_rows = M.rows();
 
-    double function_value = 0;
-    Eigen::MatrixXd ei = Eigen::MatrixXd::Zero(1,1);
-    for(int i = 0; i < n_rows; ++i){
-        ei = M.block(i,0,1,n_cols) * v;
-        function_value = function_value + (ei(0,0) * ei(0,0));
-    }
-    //std::cout << "Is the true obj. func. called? " << function_value << std::endl;
-    return function_value;
+
+    return ( (v.transpose() * M * v ) (0,0) );
 }
 
 opengv::rotation_t LineIntersection3DRegistrationFunctionInfo::
@@ -93,34 +96,36 @@ opengv::rotation_t LineIntersection3DRegistrationFunctionInfo::
     v(15,0) = rotation(0,2);
     v(16,0) = rotation(1,2);
     v(17,0) = rotation(2,2);
-    int n_cols = M.cols();
-    int n_rows = M.rows();
-
-    double function_value = 0;
-    Eigen::MatrixXd ei = Eigen::MatrixXd::Zero(1,1);
-    Eigen::Matrix3d grad = Eigen::Matrix3d::Zero(3,3);
-    for(int i = 0; i < n_rows; ++i){
-        ei = M.block(i,0,1,n_cols) * v;
-        grad(0,0) = grad(0,0) + 2 * ( ei(0,0) * (M(i,1) * translation(2,0) - M(i,2) * translation(1,0) + M(i,9))  );
-        grad(1,0) = grad(1,0) + 2 * ( ei(0,0) * (M(i,2) * translation(0,0) - M(i,0) * translation(2,0) + M(i,10)) );
-        grad(2,0) = grad(2,0) + 2 * ( ei(0,0) * (M(i,0) * translation(1,0) - M(i,1) * translation(0,0) + M(i,11)) );
-        
-        grad(0,1) = grad(0,1) + 2 * ( ei(0,0) * (M(i,4) * translation(2,0) - M(i,5) * translation(1,0) + M(i,12)) );
-        grad(1,1) = grad(1,1) + 2 * ( ei(0,0) * (M(i,5) * translation(0,0) - M(i,3) * translation(2,0) + M(i,13)) );
-        grad(2,1) = grad(2,1) + 2 * ( ei(0,0) * (M(i,3) * translation(1,0) - M(i,4) * translation(0,0) + M(i,14)) );
-        
-        grad(0,2) = grad(0,2) + 2 * ( ei(0,0) * (M(i,7) * translation(2,0) - M(i,8) * translation(1,0) + M(i,15)) );
-        grad(1,2) = grad(1,2) + 2 * ( ei(0,0) * (M(i,8) * translation(0,0) - M(i,6) * translation(2,0) + M(i,16)) );
-        grad(2,2) = grad(2,2) + 2 * ( ei(0,0) * (M(i,6) * translation(1,0) - M(i,7) * translation(0,0) + M(i,17)) );
+    v = M * v;
+    Eigen::MatrixXd skew_symmetric = Eigen::MatrixXd::Zero(3,3);
+    skew_symmetric(0,1) =  translation(2,0); skew_symmetric(0,2) = -translation(1,0);
+    skew_symmetric(1,0) = -translation(2,0); skew_symmetric(1,2) =  translation(0,0);
+    skew_symmetric(2,0) =  translation(1,0); skew_symmetric(2,1) = -translation(0,0);
     
-    }
-
-    return grad;
+    Eigen::MatrixXd grad = Eigen::MatrixXd::Zero(3,3);
+    grad.block<3,1>(0,0) = skew_symmetric * v.block<3,1>(0,0) + v.block<3,1>(9,0);
+    grad.block<3,1>(0,1) = skew_symmetric * v.block<3,1>(3,0) + v.block<3,1>(12,0);
+    grad.block<3,1>(0,2) = skew_symmetric * v.block<3,1>(6,0) + v.block<3,1>(15,0);
+    return 2 * grad;
 }
 
 opengv::translation_t LineIntersection3DRegistrationFunctionInfo::
     translation_gradient(const opengv::rotation_t & rotation, const opengv::translation_t & translation){
   
+    Eigen::MatrixXd dv = Eigen::MatrixXd::Zero(3,9);
+ 
+    dv(0,0) = 0;             dv(0,1) = -rotation(2,0); dv(0,2) = rotation(1,0);
+    dv(0,3) = 0;             dv(0,4) = -rotation(2,1); dv(0,5) = rotation(1,1);
+    dv(0,6) = 0;             dv(0,7) = -rotation(2,2); dv(0,8) = rotation(1,2);
+
+    dv(1,0) = rotation(2,0); dv(1,1) = 0;              dv(1,2) = -rotation(0,0);
+    dv(1,3) = rotation(2,1); dv(1,4) = 0;              dv(1,5) = -rotation(0,1);
+    dv(1,6) = rotation(2,2); dv(1,7) = 0;              dv(1,8) = -rotation(0,2);
+
+    dv(2,0) = -rotation(1,0); dv(2,1) = rotation(0,0); dv(2,2) = 0;
+    dv(2,3) = -rotation(1,1); dv(2,4) = rotation(0,1); dv(2,5) = 0;
+    dv(2,6) = -rotation(1,2); dv(2,7) = rotation(0,2); dv(2,8) = 0;
+
     Eigen::MatrixXd v = Eigen::MatrixXd::Zero(18,1);
 
     v(0,0)  = translation(1,0) * rotation(2,0) - translation(2,0) * rotation(1,0);
@@ -133,7 +138,6 @@ opengv::translation_t LineIntersection3DRegistrationFunctionInfo::
     v(7,0)  = translation(2,0) * rotation(0,2) - translation(0,0) * rotation(2,2);
     v(8,0)  = translation(0,0) * rotation(1,2) - translation(1,0) * rotation(0,2);
     
-
     v(9,0)  = rotation(0,0);
     v(10,0) = rotation(1,0);
     v(11,0) = rotation(2,0);
@@ -143,29 +147,8 @@ opengv::translation_t LineIntersection3DRegistrationFunctionInfo::
     v(15,0) = rotation(0,2);
     v(16,0) = rotation(1,2);
     v(17,0) = rotation(2,2);
-    int n_cols = M.cols();
-    int n_rows = M.rows();
 
-    Eigen::MatrixXd ei = Eigen::MatrixXd::Zero(1,1);
-    opengv::translation_t grad = Eigen::Vector3d::Zero(3,1);
-    opengv::translation_t grad_iter = Eigen::Vector3d::Zero(3,1);
-    for(int i = 0; i < n_rows; ++i){
-        ei = M.block(i,0,1,n_cols) * v;
-        grad_iter(0,0) = M(i,2) * rotation(1,0) - M(i,1) * rotation(2,0) +
-        M(i,5) * rotation(1,1) - M(i,4) * rotation(2,1) +
-        M(i,8) * rotation(1,2) - M(i,7) * rotation(2,2);
-        
-        grad_iter(1,0) = M(i,0) * rotation(2,0) - M(i,2) * rotation(0,0) +
-        M(i,3) * rotation(2,1) - M(i,5) * rotation(0,1) +
-        M(i,6) * rotation(2,2) - M(i,8) * rotation(0,2);
 
-        grad_iter(2,0) = M(i,1) * rotation(0,0) - M(i,0) * rotation(1,0) +
-        M(i,4) * rotation(0,1) - M(i,3) * rotation(1,1) +
-        M(i,7) * rotation(0,2) - M(i,6) * rotation(1,2);
-
-        grad = grad + (2 * ei(0,0) * grad_iter);
-    }
-
-    return grad;
+    return (2 * dv * M.block<9,18>(0,0) * v);
 }
 

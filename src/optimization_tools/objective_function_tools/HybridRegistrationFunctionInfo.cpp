@@ -22,7 +22,7 @@ double HybridRegistrationFunctionInfo::objective_function_value(const opengv::ro
   // std::cout << this->planeWeight << " cost function: " << planeFunction.objective_function_value(rotation,translation) << std::endl;
   return this->pointWeight*pointFunction.objective_function_value(rotation,translation)
          + this->planeWeight*planeFunction.objective_function_value(rotation,translation)
-        //  + this->lineIntWeight*lineIntFunction.objective_function_value(rotation,translation)
+         + this->lineIntWeight*lineIntFunction.objective_function_value(rotation,translation)
          + this->lineWeight*lineFunction.objective_function_value(rotation,translation);
 
 }
@@ -32,7 +32,7 @@ opengv::rotation_t HybridRegistrationFunctionInfo::rotation_gradient(const openg
 
     return this->pointWeight*pointFunction.rotation_gradient(rotation,translation)
          + this->planeWeight*planeFunction.rotation_gradient(rotation,translation)
-        //  + this->lineIntWeight*lineIntFunction.rotation_gradient(rotation,translation)
+         + this->lineIntWeight*lineIntFunction.rotation_gradient(rotation,translation)
          + this->lineWeight*lineFunction.rotation_gradient(rotation,translation);
 }
 
@@ -41,6 +41,6 @@ opengv::translation_t HybridRegistrationFunctionInfo::translation_gradient(const
 
     return this->pointWeight*pointFunction.translation_gradient(rotation,translation)
          + this->planeWeight*planeFunction.translation_gradient(rotation,translation)
-        //  + this->lineIntWeight*lineIntFunction.translation_gradient(rotation,translation)
+         + this->lineIntWeight*lineIntFunction.translation_gradient(rotation,translation)
          + this->lineWeight*lineFunction.translation_gradient(rotation,translation);
 }
